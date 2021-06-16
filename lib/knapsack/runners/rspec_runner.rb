@@ -19,19 +19,28 @@ module Knapsack
         files = circle_cmd.scan(/"\/home\/circleci\/super_samurai\/.*"/)
         files_without_circle_path = files.map { |f| f.gsub(Regexp.new(Regexp.escape('/home/circleci/super_samurai/')), '') }.join('')
         bisect_command = "bin/rspec --seed #{generated_seed} #{files_without_circle_path} --bisect"
-        puts "\n\nunderlying rspec command invoked by knapsack:"
-        puts circle_cmd
-        puts "\n\n"
-        puts "*** Transient failure? Bisect can help! ***"
-        puts "Option 1 Non-parallel: "
-        puts "DISABLE_SPRING=1 #{bisect_command}"
-        puts "\n\n"
-        puts "Option 2 Parallel: "
-        puts "if you haven't already, you need to setup the extra databases first:"
-        puts "rake parallel:create"
-        puts "\nRun bisect in parallel:"
-        puts "/usr/bin/env TEST_ENV_NUMBER=2 DISABLE_SPRING=1 parallel_rspec -n 1 -e '#{bisect_command}'"
-        puts "\n\n"
+
+        output = <<~HEREDOC
+          Underlying rspec command invoked by knapsack:
+          #{circle_cmd}
+
+
+          *** Transient failure? Bisect can help! ***
+          ~~ Option 1 Non-parallel:
+          DISABLE_SPRING=1 #{bisect_command}
+
+
+          ~~ Option 2 Parallel:
+          If you haven't already, you need to setup the extra databases first:
+          rake parallel:create
+
+          Run bisect in parallel:
+          /usr/bin/env TEST_ENV_NUMBER=2 DISABLE_SPRING=1 parallel_rspec -n 1 -e '#{bisect_command}'
+
+
+        HEREDOC
+
+        puts output
         system(circle_cmd)
         exit($?.exitstatus) unless $?.exitstatus == 0
       end
