@@ -18,12 +18,19 @@ module Knapsack
         circle_cmd = %Q[bin/rspec #{args} --seed #{generated_seed} --default-path #{allocator.test_dir} -- #{allocator.stringify_node_tests}]
         files = circle_cmd.scan(/"\/home\/circleci\/super_samurai\/.*"/)
         files_without_circle_path = files.map { |f| f.gsub(Regexp.new(Regexp.escape('/home/circleci/super_samurai/')), '') }.join('')
-
+        bisect_command = "bin/rspec --seed #{generated_seed} #{files_without_circle_path} --bisect"
         puts "\n\nunderlying rspec command invoked by knapsack:"
         puts circle_cmd
         puts "\n\n"
-        puts "to run bisect (non-parallel):"
-        puts "DISABLE_SPRING=1 bin/rspec --seed #{generated_seed} #{files_without_circle_path} --bisect"
+        puts "*** Transient failure? Bisect can help! ***"
+        puts "Option 1 Non-parallel: "
+        puts "DISABLE_SPRING=1 #{bisect_command}"
+        puts "\n\n"
+        puts "Option 2 Parallel: "
+        puts "if you haven't already, you need to setup the extra databases first:"
+        puts "rake parallel:create"
+        puts "\nRun bisect in parallel:"
+        puts "/usr/bin/env TEST_ENV_NUMBER=2 DISABLE_SPRING=1 parallel_rspec -n 1 -e '#{bisect_command}'"
         puts "\n\n"
         system(circle_cmd)
         exit($?.exitstatus) unless $?.exitstatus == 0
